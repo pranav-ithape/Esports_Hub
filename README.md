@@ -69,7 +69,7 @@ The proposed system integrates multiple esports services into a single web platf
 - Figma  
 
 ### Payments
-- Razorpay / Stripe  
+- Razorpay  
 
 ---
 
