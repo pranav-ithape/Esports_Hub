@@ -136,6 +136,26 @@ By combining performance analytics with merchandise and engagement tools, the pl
 
 ---
 
+## 📸 Screenshots
+
+### 🏠 Home Page
+Displays featured esports teams, navigation menu, and latest updates.
+![Home Page](images/home_page.png)
+
+---
+
+### 📊 Player Statistics
+Shows player performance, stats, and leaderboards.
+![Player Statistics](images/player_stats.png)
+
+---
+
+### 🛒 Merchandise Store
+Allows users to browse and purchase official team merchandise & accessories.
+![Merchandise Store](images/merch_page.png)
+
+---
+
 ## 📄 License
 
 This project is developed for **academic and educational purposes**.
