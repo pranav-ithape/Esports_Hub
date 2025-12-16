@@ -65,8 +65,7 @@ The proposed system integrates multiple esports services into a single web platf
 ### Database
 - Supabase  
 
-### UI & Design
-- Tailwind CSS  
+### UI & Design  
 - Figma  
 
 ### Payments
