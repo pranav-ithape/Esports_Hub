@@ -12,6 +12,7 @@ import { Footer } from "./components/Footer";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { CartProvider } from "./components/CartContext";
 import { Toaster } from "./components/ui/sonner";
+import { DatabaseTest } from "./components/DatabaseTest";
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState("home");
@@ -41,6 +42,8 @@ export default function App() {
         return <Cart onNavigate={handleNavigate} />;
       case "login":
         return <Login onNavigate={handleNavigate} />;
+      case "database-test":
+        return <DatabaseTest />;
       default:
         return (
           <>

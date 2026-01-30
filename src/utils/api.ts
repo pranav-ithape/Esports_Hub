@@ -1,14 +1,14 @@
 import { projectId, publicAnonKey } from './supabase/info'
 
-const API_BASE_URL = `https://${'gszojnzfjgywuonzvhiz'}.supabase.co/functions/v1/make-server-30bcd8f7`
+const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-30bcd8f7`
 
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   try {
-    const url = `${eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzem9qbnpmamd5d3Vvbnp2aGl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExMzM3MTcsImV4cCI6MjA3NjcwOTcxN30.MYDfetERKvpnotcxn7HPD1J-I-Fq87xWYt_CZ4tdgII}${endpoint}`
+    const url = `${API_BASE_URL}${endpoint}`
     console.log(`Making API call to: ${url}`)
     console.log('Project ID:', projectId)
     console.log('Public Anon Key present:', !!publicAnonKey)
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -19,7 +19,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     })
 
     console.log(`API response status for ${endpoint}:`, response.status)
-    
+
     if (!response.ok) {
       const errorText = await response.text()
       console.error(`API error for ${endpoint}:`, errorText)

@@ -1,34 +1,29 @@
-import { projectId, publicAnonKey } from './supabase/info'
+import { supabase } from './supabase/supabaseclient'
 
 export const testBackendConnection = async () => {
   try {
-    const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-30bcd8f7`
+    console.log('Testing Supabase database connection...')
     
-    console.log('Testing backend connection...')
-    console.log('API Base URL:', API_BASE_URL)
-    console.log('Project ID:', projectId)
-    console.log('Public Anon Key:', publicAnonKey ? 'Present' : 'Missing')
-    
-    const response = await fetch(`${API_BASE_URL}/health`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${publicAnonKey}`,
-      },
-    })
+    // Test 1: Get session
+    const { data: { session } } = await supabase.auth.getSession()
+    console.log('Session status:', session ? 'Authenticated' : 'Anonymous')
 
-    console.log('Response status:', response.status)
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+    // Test 2: Simple database query
+    const { data, error } = await supabase
+      .from('teams')
+      .select('count')
+      .limit(1)
     
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Error response:', errorText)
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+    if (error && error.code !== 'PGRST116') {
+      throw error
     }
 
-    const data = await response.json()
-    console.log('Health check successful:', data)
-    return data
+    console.log('Database connection test successful!')
+    return { 
+      success: true, 
+      message: 'Connected to Supabase database',
+      session: session ? 'Authenticated' : 'Anonymous'
+    }
   } catch (error) {
     console.error('Backend connection test failed:', error)
     throw error
