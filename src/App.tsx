@@ -11,6 +11,7 @@ import { Login } from "./components/Login";
 import { Footer } from "./components/Footer";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { CartProvider } from "./components/CartContext";
+import { CountryProvider } from "./components/CountryContext";
 import { Toaster } from "./components/ui/sonner";
 import { DatabaseTest } from "./components/DatabaseTest";
 
@@ -56,16 +57,18 @@ export default function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="esports-theme">
-      <CartProvider>
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-          <Header currentSection={currentSection} onNavigate={handleNavigate} />
-          <main>
-            {renderContent()}
-          </main>
-          <Footer />
-          <Toaster />
-        </div>
-      </CartProvider>
+      <CountryProvider>
+        <CartProvider>
+          <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <Header currentSection={currentSection} onNavigate={handleNavigate} />
+            <main>
+              {renderContent()}
+            </main>
+            <Footer />
+            <Toaster />
+          </div>
+        </CartProvider>
+      </CountryProvider>
     </ThemeProvider>
   );
 }

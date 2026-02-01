@@ -8,61 +8,12 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { ShoppingCart, Star, Heart, Filter, Globe, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart } from "./CartContext";
+import { useCountry } from "./CountryContext";
 import { toast } from "sonner";
 import { shopApi } from "../utils/api";
 import { fallbackShopItems } from "../utils/fallbackData";
 
-const countries = [
-  { name: "Argentina", currency: "ARS", symbol: "$", rate: 850 },
-  { name: "Australia", currency: "AUD", symbol: "A$", rate: 1.55 },
-  { name: "Austria", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Belgium", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Brazil", currency: "BRL", symbol: "R$", rate: 5.2 },
-  { name: "Bulgaria", currency: "BGN", symbol: "лв", rate: 1.8 },
-  { name: "Canada", currency: "CAD", symbol: "C$", rate: 1.35 },
-  { name: "Chile", currency: "CLP", symbol: "$", rate: 920 },
-  { name: "China", currency: "CNY", symbol: "¥", rate: 7.2 },
-  { name: "Colombia", currency: "COP", symbol: "$", rate: 4200 },
-  { name: "Croatia", currency: "HRK", symbol: "kn", rate: 6.9 },
-  { name: "Czech Republic", currency: "CZK", symbol: "Kč", rate: 23 },
-  { name: "Denmark", currency: "DKK", symbol: "kr", rate: 6.9 },
-  { name: "Estonia", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Finland", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "France", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Germany", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Greece", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Hungary", currency: "HUF", symbol: "Ft", rate: 360 },
-  { name: "India", currency: "INR", symbol: "₹", rate: 83 },
-  { name: "Indonesia", currency: "IDR", symbol: "Rp", rate: 15800 },
-  { name: "Italy", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Japan", currency: "JPY", symbol: "¥", rate: 148 },
-  { name: "Latvia", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Lithuania", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Malaysia", currency: "MYR", symbol: "RM", rate: 4.7 },
-  { name: "Mexico", currency: "MXN", symbol: "$", rate: 18 },
-  { name: "Netherlands", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Norway", currency: "NOK", symbol: "kr", rate: 10.8 },
-  { name: "Peru", currency: "PEN", symbol: "S/", rate: 3.7 },
-  { name: "Philippines", currency: "PHP", symbol: "₱", rate: 56 },
-  { name: "Poland", currency: "PLN", symbol: "zł", rate: 4.1 },
-  { name: "Portugal", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Romania", currency: "RON", symbol: "lei", rate: 4.6 },
-  { name: "Russia", currency: "RUB", symbol: "₽", rate: 92 },
-  { name: "Serbia", currency: "RSD", symbol: "дин", rate: 108 },
-  { name: "Singapore", currency: "SGD", symbol: "S$", rate: 1.35 },
-  { name: "Slovakia", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Slovenia", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "South Korea", currency: "KRW", symbol: "₩", rate: 1320 },
-  { name: "Spain", currency: "EUR", symbol: "€", rate: 0.92 },
-  { name: "Sweden", currency: "SEK", symbol: "kr", rate: 10.5 },
-  { name: "Switzerland", currency: "CHF", symbol: "CHF", rate: 0.88 },
-  { name: "Thailand", currency: "THB", symbol: "฿", rate: 36 },
-  { name: "Turkey", currency: "TRY", symbol: "₺", rate: 30 },
-  { name: "Ukraine", currency: "UAH", symbol: "₴", rate: 37 },
-  { name: "United Kingdom", currency: "GBP", symbol: "£", rate: 0.79 },
-  { name: "United States", currency: "USD", symbol: "$", rate: 1 },
-  { name: "Vietnam", currency: "VND", symbol: "₫", rate: 24500 }
-];
+
 
 const jerseys = [
   {
@@ -191,9 +142,9 @@ const allProducts = [...jerseys, ...accessories];
 
 export function Shop() {
   const { addToCart: addToCartContext } = useCart();
+  const { selectedCountry, setSelectedCountry, countries, formatPrice: formatPriceContext } = useCountry();
   const [favorites, setFavorites] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedCountry, setSelectedCountry] = useState("United States");
   const [searchQuery, setSearchQuery] = useState("");
   const [shopItems, setShopItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,11 +188,7 @@ export function Shop() {
   };
 
   const formatPrice = (basePrice: number) => {
-    const country = countries.find(c => c.name === selectedCountry);
-    if (!country) return `${basePrice}`;
-    
-    const convertedPrice = basePrice * country.rate;
-    return `${country.symbol}${convertedPrice.toFixed(convertedPrice < 10 ? 2 : 0)}`;
+    return formatPriceContext(basePrice);
   };
 
   const addToCart = (product: any) => {
@@ -389,22 +336,7 @@ export function Shop() {
                 />
               </div>
               
-              {/* Country/Currency Filter */}
-              <div className="flex items-center space-x-2">
-                <Globe className="w-4 h-4 text-muted-foreground" />
-                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger className="w-full sm:w-48 bg-card border-border text-foreground">
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    {countries.map((country) => (
-                      <SelectItem key={country.name} value={country.name} className="text-foreground hover:bg-muted">
-                        {country.name} ({country.currency})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
               
               <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted">
                 <Filter className="w-4 h-4 mr-2" />

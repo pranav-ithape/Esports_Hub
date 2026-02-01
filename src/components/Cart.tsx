@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2, ShoppingCart, CreditCard, ArrowLeft } from "lucide
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useCart } from "./CartContext";
+import { useCountry } from "./CountryContext";
 
 interface CartItem {
   id: number;
@@ -30,43 +31,9 @@ interface CartProps {
 
 export function Cart({ onNavigate }: CartProps) {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { formatPrice } = useCountry();
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [currency, setCurrency] = useState("USD");
-
-  const currencyRates = {
-    USD: 1,
-    EUR: 0.92,
-    GBP: 0.79,
-    INR: 83.12,
-    JPY: 149.34,
-    KRW: 1329.50,
-    CAD: 1.36,
-    AUD: 1.52,
-    BRL: 4.93,
-  };
-
-  const currencySymbols = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-    INR: "₹",
-    JPY: "¥",
-    KRW: "₩",
-    CAD: "C$",
-    AUD: "A$",
-    BRL: "R$",
-  };
-
-  const convertPrice = (priceUSD: number) => {
-    return (priceUSD * currencyRates[currency as keyof typeof currencyRates]).toFixed(2);
-  };
-
-  const formatPrice = (priceUSD: number) => {
-    const convertedPrice = convertPrice(priceUSD);
-    const symbol = currencySymbols[currency as keyof typeof currencySymbols];
-    return `${symbol}${convertedPrice}`;
-  };
 
   const applyPromoCode = () => {
     const validCodes = {
@@ -139,22 +106,9 @@ export function Cart({ onNavigate }: CartProps) {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(currencyRates).map((curr) => (
-                    <SelectItem key={curr} value={curr}>
-                      {curr}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Button 
+              <Button
                 onClick={clearCart}
-                variant="outline" 
+                variant="outline"
                 className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
               >
                 <Trash2 className="w-4 h-4 mr-2" />

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { useCountry } from "./CountryContext";
 
 interface HeaderProps {
   currentSection: string;
@@ -31,84 +32,8 @@ export function Header({
 }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [selectedCountry, setSelectedCountry] =
-    useState("Global");
   const { theme, setTheme } = useTheme();
-
-  const countries = [
-    "Global",
-    "Algeria",
-    "Argentina",
-    "Australia",
-    "Austria",
-    "Belgium",
-    "Botswana",
-    "Brazil",
-    "Bulgaria",
-    "Canada",
-    "Chile",
-    "China",
-    "Colombia",
-    "Croatia",
-    "Czech Republic",
-    "Denmark",
-    "Egypt",
-    "Estonia",
-    "Ethiopia",
-    "Fiji",
-    "Finland",
-    "France",
-    "Germany",
-    "Ghana",
-    "Greece",
-    "Hungary",
-    "India",
-    "Indonesia",
-    "Italy",
-    "Japan",
-    "Kenya",
-    "Latvia",
-    "Lithuania",
-    "Malaysia",
-    "Mexico",
-    "Morocco",
-    "Namibia",
-    "Netherlands",
-    "New Zealand",
-    "Nigeria",
-    "Norway",
-    "Papua New Guinea",
-    "Peru",
-    "Philippines",
-    "Poland",
-    "Portugal",
-    "Romania",
-    "Russia",
-    "Rwanda",
-    "Samoa",
-    "Serbia",
-    "Singapore",
-    "Slovakia",
-    "Slovenia",
-    "South Africa",
-    "South Korea",
-    "Spain",
-    "Sweden",
-    "Switzerland",
-    "Tanzania",
-    "Thailand",
-    "Tonga",
-    "Tunisia",
-    "Turkey",
-    "Uganda",
-    "Ukraine",
-    "United Kingdom",
-    "United States",
-    "Vanuatu",
-    "Vietnam",
-    "Zambia",
-    "Zimbabwe",
-  ];
+  const { selectedCountry, setSelectedCountry, countries, getCurrentCountry } = useCountry();
 
   // Check for logged in user on component mount
   useEffect(() => {
@@ -198,17 +123,17 @@ export function Header({
                 <SelectTrigger className="w-32 h-8 text-xs">
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {countries.map((country) => (
-                    <SelectItem
-                      key={country}
-                      value={country}
-                      className="text-xs"
-                    >
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                    <SelectContent className="max-h-60">
+                      {countries.map((country) => (
+                        <SelectItem
+                          key={country.name}
+                          value={country.name}
+                          className="text-xs"
+                        >
+                          {country.name} ({country.currency})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
               </Select>
             </div>
 

@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Separator } from "./ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Github, Twitter } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { authApi } from "../utils/api";
-import { toast } from "sonner@2.0.3";
+import { supabase } from "../utils/supabase/supabaseclient"; // Make sure this imports from the actual implementation file, not the .d.ts file
+import { toast } from "sonner";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface LoginProps {
@@ -61,18 +61,35 @@ export function Login({ onNavigate }: LoginProps) {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock successful login
-      localStorage.setItem('esports-user', JSON.stringify({
-        name: "Gamer Pro",
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: loginForm.email,
-        avatar: "https://images.unsplash.com/photo-1659259809484-355b1ead9656?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBnYW1lcnxlbnwxfHx8fDE3NTY1Mzc1OTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-        joinDate: new Date().toISOString()
-      }));
+        password: loginForm.password,
+      });
+
+      if (error) {
+        setErrors({ general: error.message });
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        localStorage.setItem('esports-user', JSON.stringify({
+          id: data.user.id,
+          name: data.user.user_metadata?.name || "Gamer Pro",
+          email: data.user.email,
+          avatar: data.user.user_metadata?.avatar || "https://images.unsplash.com/photo-1659259809484-355b1ead9656?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBnYW1lcnxlbnwxfHx8fDE3NTY1Mzc1OTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+          joinDate: data.user.created_at
+        }));
+        toast.success("Login successful!");
+        setIsLoading(false);
+        onNavigate?.('home');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ general: "An unexpected error occurred" });
       setIsLoading(false);
-      onNavigate?.('home');
-    }, 2000);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -109,34 +126,38 @@ export function Login({ onNavigate }: LoginProps) {
     }
 
     try {
-      // Try to use the backend API for signup
-      const response = await authApi.signup(signupForm.email, signupForm.password, signupForm.name);
-      
-      if (response.success) {
+      const { data, error } = await supabase.auth.signUp({
+        email: signupForm.email,
+        password: signupForm.password,
+        options: {
+          data: {
+            name: signupForm.name,
+          }
+        }
+      });
+
+      if (error) {
+        setErrors({ general: error.message });
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.user) {
         localStorage.setItem('esports-user', JSON.stringify({
+          id: data.user.id,
           name: signupForm.name,
-          email: signupForm.email,
+          email: data.user.email,
           avatar: "https://images.unsplash.com/photo-1659259809484-355b1ead9656?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHhwcm9mZXNzaW9uYWwlMjBnYW1lcnxlbnwxfHx8fDE3NTY1Mzc1OTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-          joinDate: new Date().toISOString()
+          joinDate: data.user.created_at
         }));
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Please check your email to verify your account.");
         setIsLoading(false);
         onNavigate?.('home');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      // Fallback to mock signup if API fails
-      setTimeout(() => {
-        localStorage.setItem('esports-user', JSON.stringify({
-          name: signupForm.name,
-          email: signupForm.email,
-          avatar: "https://images.unsplash.com/photo-1659259809484-355b1ead9656?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHhwcm9mZXNzaW9uYWwlMjBnYW1lcnxlbnwxfHx8fDE3NTY1Mzc1OTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-          joinDate: new Date().toISOString()
-        }));
-        toast.success("Account created successfully!");
-        setIsLoading(false);
-        onNavigate?.('home');
-      }, 1500);
+      setErrors({ general: "An unexpected error occurred" });
+      setIsLoading(false);
     }
   };
 
