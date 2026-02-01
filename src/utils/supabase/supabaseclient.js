@@ -5,4 +5,11 @@ import { projectId, publicAnonKey } from './info'
 const supabaseUrl = `https://${projectId}.supabase.co`
 const supabaseKey = publicAnonKey
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  }
+})

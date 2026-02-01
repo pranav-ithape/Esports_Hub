@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Separator } from "./ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Github, Twitter } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { supabase } from "../utils/supabase/supabaseclient"; // Make sure this imports from the actual implementation file, not the .d.ts file
+import { supabase } from "../utils/supabase/supabaseclient.js";
 import { toast } from "sonner";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
@@ -132,31 +132,37 @@ export function Login({ onNavigate }: LoginProps) {
         options: {
           data: {
             name: signupForm.name,
+            full_name: signupForm.name
           }
         }
       });
 
       if (error) {
+        console.error('Supabase signup error:', error);
         setErrors({ general: error.message });
         setIsLoading(false);
         return;
       }
 
       if (data.user) {
-        localStorage.setItem('esports-user', JSON.stringify({
+        // Profile will be created automatically by the database trigger
+        // For now, store basic user info
+        const userData = {
           id: data.user.id,
           name: signupForm.name,
           email: data.user.email,
           avatar: "https://images.unsplash.com/photo-1659259809484-355b1ead9656?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHhwcm9mZXNzaW9uYWwlMjBnYW1lcnxlbnwxfHx8fDE3NTY1Mzc1OTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
           joinDate: data.user.created_at
-        }));
+        };
+
+        localStorage.setItem('esports-user', JSON.stringify(userData));
         toast.success("Account created successfully! Please check your email to verify your account.");
         setIsLoading(false);
         onNavigate?.('home');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      setErrors({ general: "An unexpected error occurred" });
+      setErrors({ general: "An unexpected error occurred. Please try again." });
       setIsLoading(false);
     }
   };

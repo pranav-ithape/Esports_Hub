@@ -163,11 +163,19 @@ export function Header({
 
             {user ? (
               <div className="flex items-center space-x-2">
-                <ImageWithFallback
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full"
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigation("profile")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <ImageWithFallback
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-6 h-6 rounded-full mr-2"
+                  />
+                  Profile
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -292,16 +300,19 @@ export function Header({
 
                 {user ? (
                   <div className="flex flex-col space-y-2">
-                    <div className="flex items-center space-x-2 px-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleNavigation("profile")}
+                      className="text-muted-foreground hover:text-foreground justify-start"
+                    >
                       <ImageWithFallback
                         src={user.avatar}
                         alt={user.name}
-                        className="w-6 h-6 rounded-full"
+                        className="w-6 h-6 rounded-full mr-2"
                       />
-                      <span className="text-sm text-foreground">
-                        {user.name}
-                      </span>
-                    </div>
+                      Profile
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

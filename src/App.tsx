@@ -8,6 +8,7 @@ import { Tournaments } from "./components/Tournaments";
 import { Shop } from "./components/Shop";
 import { Cart } from "./components/Cart";
 import { Login } from "./components/Login";
+import { Profile } from "./components/Profile";
 import { Footer } from "./components/Footer";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { CartProvider } from "./components/CartContext";
@@ -43,6 +44,8 @@ export default function App() {
         return <Cart onNavigate={handleNavigate} />;
       case "login":
         return <Login onNavigate={handleNavigate} />;
+      case "profile":
+        return <Profile onNavigate={handleNavigate} />;
       case "database-test":
         return <DatabaseTest />;
       default:
