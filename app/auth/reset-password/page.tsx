@@ -3,12 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 export default function ResetPasswordPage() {
@@ -100,6 +101,16 @@ export default function ResetPasswordPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {!isSupabaseConfigured && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Supabase Not Connected</AlertTitle>
+                <AlertDescription>
+                  Please connect Supabase from the sidebar to reset your password.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
@@ -152,7 +163,7 @@ export default function ResetPasswordPage() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               >
                 {isLoading ? "Updating..." : "Update Password"}
               </Button>

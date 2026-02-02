@@ -45,7 +45,7 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { user, signOut } = useAuth()
+  const { user, signOut, isConfigured } = useAuth()
   const { getCartItemsCount } = useCart()
   const { selectedCountry, setSelectedCountry, countries } = useCountry()
   const { theme, setTheme } = useTheme()

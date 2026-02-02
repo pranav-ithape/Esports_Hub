@@ -3,11 +3,12 @@
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { ArrowLeft, Mail, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ArrowLeft, Mail, CheckCircle, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 function VerifyEmailContent() {
@@ -117,6 +118,16 @@ function VerifyEmailContent() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {!isSupabaseConfigured && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Supabase Not Connected</AlertTitle>
+                <AlertDescription>
+                  Please connect Supabase from the sidebar to enable email verification.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="flex justify-center">
               <InputOTP
                 maxLength={6}
@@ -139,7 +150,7 @@ function VerifyEmailContent() {
             <Button
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               onClick={handleVerify}
-              disabled={isLoading || otp.length !== 6}
+              disabled={isLoading || otp.length !== 6 || !isSupabaseConfigured}
             >
               {isLoading ? "Verifying..." : "Verify Email"}
             </Button>

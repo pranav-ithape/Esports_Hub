@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import { useAuth } from "@/components/auth-provider"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -175,7 +175,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!user) {
+  if (!user || !isSupabaseConfigured) {
     router.push("/auth/login")
     return null
   }

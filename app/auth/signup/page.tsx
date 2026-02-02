@@ -3,13 +3,14 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 export default function SignUpPage() {
@@ -118,6 +119,16 @@ export default function SignUpPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {!isSupabaseConfigured && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Supabase Not Connected</AlertTitle>
+                <AlertDescription>
+                  Please connect Supabase from the sidebar to enable authentication.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -206,7 +217,7 @@ export default function SignUpPage() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               >
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
@@ -225,7 +236,7 @@ export default function SignUpPage() {
               variant="outline"
               className="w-full"
               onClick={handleGoogleSignUp}
-              disabled={isLoading}
+              disabled={isLoading || !isSupabaseConfigured}
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
