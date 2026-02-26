@@ -20,31 +20,41 @@ import {
 } from "./ui/select";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useCountry } from "./CountryContext";
+import { supabase } from "../utils/supabase/supabaseclient";
 
 interface HeaderProps {
   currentSection: string;
   onNavigate: (section: string) => void;
 }
 
-export function Header({
-  currentSection,
-  onNavigate,
-}: HeaderProps) {
+export function Header({ currentSection, onNavigate }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const { theme, setTheme } = useTheme();
-  const { selectedCountry, setSelectedCountry, countries, getCurrentCountry } = useCountry();
+  const { selectedCountry, setSelectedCountry, countries } = useCountry();
 
-  // Check for logged in user on component mount
+  // 🔥 Supabase Auth Listener
   useEffect(() => {
-    const savedUser = localStorage.getItem("esports-user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("esports-user");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     onNavigate("home");
   };
@@ -67,53 +77,36 @@ export function Header({
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => handleNavigation("home")}
           >
-            <ImageWithFallback
+            <img
               src="/assets/websitelogo/logo.png"
-              alt="Esports Hub Logo"
+              alt="Logo"
               className="w-10 h-10 rounded object-cover"
             />
-            <span className="text-xl font-bold text-foreground">
-              Esports Hub
-            </span>
+            <span className="text-xl font-bold">Esports Hub</span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => handleNavigation("home")}
-              className={`transition-colors ${currentSection === "home" ? "text-foreground border-b-2 border-blue-500" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => handleNavigation("teams")}
-              className={`transition-colors ${currentSection === "teams" ? "text-foreground border-b-2 border-blue-500" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Teams
-            </button>
-            <button
-              onClick={() => handleNavigation("players")}
-              className={`transition-colors ${currentSection === "players" ? "text-foreground border-b-2 border-blue-500" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Players
-            </button>
-            <button
-              onClick={() => handleNavigation("tournaments")}
-              className={`transition-colors ${currentSection === "tournaments" ? "text-foreground border-b-2 border-blue-500" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Tournaments
-            </button>
-            <button
-              onClick={() => handleNavigation("shop")}
-              className={`transition-colors ${currentSection === "shop" ? "text-foreground border-b-2 border-blue-500" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Shop
-            </button>
+            {["home", "teams", "players", "tournaments", "shop"].map(
+              (section) => (
+                <button
+                  key={section}
+                  onClick={() => handleNavigation(section)}
+                  className={`transition-colors ${
+                    currentSection === section
+                      ? "text-foreground border-b-2 border-blue-500"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {section.charAt(0).toUpperCase() + section.slice(1)}
+                </button>
+              )
+            )}
           </nav>
 
-          {/* Action Buttons */}
+          {/* Right Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Country Selector */}
+            {/* Country */}
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4 text-muted-foreground" />
               <Select
@@ -123,27 +116,18 @@ export function Header({
                 <SelectTrigger className="w-32 h-8 text-xs">
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {countries.map((country) => (
-                        <SelectItem
-                          key={country.name}
-                          value={country.name}
-                          className="text-xs"
-                        >
-                          {country.name} ({country.currency})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.name} value={country.name}>
+                      {country.name} ({country.currency})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground"
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
+            {/* Theme Toggle */}
+            <Button variant="ghost" size="sm" onClick={toggleTheme}>
               {theme === "dark" ? (
                 <Sun className="w-4 h-4" />
               ) : (
@@ -151,37 +135,36 @@ export function Header({
               )}
             </Button>
 
+            {/* Cart */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleNavigation("cart")}
-              className="text-muted-foreground hover:text-foreground"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
               Cart
             </Button>
 
+            {/* 🔥 AUTH SECTION */}
             {user ? (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleNavigation("profile")}
-                  className="text-muted-foreground hover:text-foreground"
                 >
                   <ImageWithFallback
-                    src={user.avatar}
-                    alt={user.name}
+                    src={
+                      user.user_metadata?.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${user.email}`
+                    }
+                    alt={user.email}
                     className="w-6 h-6 rounded-full mr-2"
                   />
-                  Profile
+                  My Account
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-muted-foreground hover:text-foreground"
-                >
+
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
@@ -198,146 +181,16 @@ export function Header({
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden text-muted-foreground"
+            className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            {isMenuOpen ? <X /> : <Menu />}
           </Button>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
-            <nav className="flex flex-col space-y-4">
-              <button
-                onClick={() => handleNavigation("home")}
-                className={`text-left transition-colors ${currentSection === "home" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => handleNavigation("teams")}
-                className={`text-left transition-colors ${currentSection === "teams" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Teams
-              </button>
-              <button
-                onClick={() => handleNavigation("players")}
-                className={`text-left transition-colors ${currentSection === "players" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Players
-              </button>
-              <button
-                onClick={() => handleNavigation("tournaments")}
-                className={`text-left transition-colors ${currentSection === "tournaments" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Tournaments
-              </button>
-              <button
-                onClick={() => handleNavigation("shop")}
-                className={`text-left transition-colors ${currentSection === "shop" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Shop
-              </button>
-              <div className="flex flex-col space-y-2 pt-4">
-                {/* Country Selector Mobile */}
-                <div className="flex items-center space-x-2 px-3">
-                  <Globe className="w-4 h-4 text-muted-foreground" />
-                  <Select
-                    value={selectedCountry}
-                    onValueChange={setSelectedCountry}
-                  >
-                    <SelectTrigger className="flex-1 h-8 text-xs">
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {countries.map((country) => (
-                        <SelectItem
-                          key={country}
-                          value={country}
-                          className="text-xs"
-                        >
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleTheme}
-                  className="text-muted-foreground hover:text-foreground justify-start"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="w-4 h-4 mr-2" />
-                  ) : (
-                    <Moon className="w-4 h-4 mr-2" />
-                  )}
-                  {theme === "dark"
-                    ? "Light Mode"
-                    : "Dark Mode"}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleNavigation("cart")}
-                  className="text-muted-foreground hover:text-foreground justify-start"
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Cart
-                </Button>
-
-                {user ? (
-                  <div className="flex flex-col space-y-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleNavigation("profile")}
-                      className="text-muted-foreground hover:text-foreground justify-start"
-                    >
-                      <ImageWithFallback
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-6 h-6 rounded-full mr-2"
-                      />
-                      Profile
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="text-muted-foreground hover:text-foreground justify-start"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleNavigation("login")}
-                    className="justify-start"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Login
-                  </Button>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   );
