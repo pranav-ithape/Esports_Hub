@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { ArrowLeft, Edit, Save, X, User, Mail, Calendar, Trophy, ShoppingBag } from "lucide-react";
+import { ArrowLeft, User, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
+import { auth, db } from "../lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 interface ProfileProps {
   onNavigate?: (section: string) => void;
@@ -17,219 +19,243 @@ interface ProfileProps {
 export function Profile({ onNavigate }: ProfileProps) {
   const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   const [editForm, setEditForm] = useState({
     name: "",
     email: "",
-    avatar: ""
+    phone: "",
+    bio: "",
+    favoriteGame: ""
   });
+
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Get real authenticated user
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
         onNavigate?.("login");
         return;
       }
 
-      // Fetch profile data from profiles table
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      try {
+        const docRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(docRef);
 
-      if (error) {
-        console.error("Error fetching profile:", error);
+        const userData = {
+          id: currentUser.uid,
+          name: docSnap.data()?.name || "",
+          email: currentUser.email,
+          avatar: docSnap.data()?.avatar || "",
+          phone: docSnap.data()?.phone || "",
+          bio: docSnap.data()?.bio || "",
+          favoriteGame: docSnap.data()?.favoriteGame || "",
+        };
+
+        setUser(userData);
+
+        setEditForm({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          bio: userData.bio,
+          favoriteGame: userData.favoriteGame
+        });
+
+      } catch (err) {
+        console.error(err);
       }
+    });
 
-      const userData = {
-        id: user.id,
-        name: profileData?.full_name || user.user_metadata?.name || "",
-        email: user.email,
-        avatar: profileData?.avatar_url || "",
-        joinDate: user.created_at
-      };
-
-      setUser(userData);
-
-      setEditForm({
-        name: userData.name,
-        email: userData.email || "",
-        avatar: userData.avatar || ""
-      });
-    };
-
-    checkUser();
+    return () => unsubscribe();
   }, []);
 
-  // ✅ Save updated profile
   const handleSave = async () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: editForm.name,
-          avatar_url: editForm.avatar,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", user.id);
+      const docRef = doc(db, "users", user.id);
 
-      if (error) {
-        toast.error(error.message);
-        setIsLoading(false);
-        return;
-      }
-
-      setUser({
-        ...user,
+      await updateDoc(docRef, {
         name: editForm.name,
-        avatar: editForm.avatar
+        phone: editForm.phone,
+        bio: editForm.bio,
+        favoriteGame: editForm.favoriteGame,
+        updatedAt: new Date()
       });
 
+      setUser({ ...user, ...editForm });
       setIsEditing(false);
-      toast.success("Profile updated successfully!");
-    } catch (err) {
-      toast.error("Something went wrong!");
+      toast.success("Profile updated!");
+
+    } catch {
+      toast.error("Error updating profile");
     }
 
     setIsLoading(false);
   };
 
-  const handleCancel = () => {
-    setEditForm({
-      name: user?.name || "",
-      email: user?.email || "",
-      avatar: user?.avatar || ""
-    });
-    setIsEditing(false);
+  const handleLogout = async () => {
+    await signOut(auth);
+    toast.success("Logged out");
+    onNavigate?.("login");
   };
 
-  if (!user) {
-    return (
-      <section className="py-20 bg-background min-h-screen">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
-      </section>
-    );
-  }
+  if (!user) return <div className="text-center py-20">Loading...</div>;
 
   return (
-    <section className="py-20 bg-background min-h-screen">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+    <section className="min-h-screen bg-background flex justify-center px-4 py-16">
+      <div className="w-full max-w-4xl flex flex-col items-center">
 
-          <div className="flex items-center mb-8">
-            <Button
-              onClick={() => onNavigate?.("home")}
-              variant="outline"
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </div>
+        {/* TOP */}
+        <div className="flex justify-between mb-6 w-full">
+          <Button
+            variant="outline"
+            onClick={() => onNavigate?.("home")}
+            className="border-white/10 hover:bg-white/10 transition"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Left Profile Card */}
-            <div>
-              <Card className="shadow-lg">
-                <CardHeader className="text-center">
-                  <Avatar className="w-24 h-24 mx-auto mb-4">
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>
-                      <User className="w-12 h-12" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <CardTitle>{user.name}</CardTitle>
-                  <p className="text-muted-foreground">{user.email}</p>
-                  <Badge className="mt-2">
-                    <Trophy className="w-3 h-3 mr-1" />
-                    Esports Enthusiast
-                  </Badge>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Joined {new Date(user.joinDate).toLocaleDateString()}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Profile Details */}
-            <div className="lg:col-span-2">
-              <Card className="shadow-lg">
-                <CardHeader className="flex justify-between items-center">
-                  <CardTitle>Profile Information</CardTitle>
-
-                  {!isEditing ? (
-                    <Button onClick={() => setIsEditing(true)} size="sm">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button onClick={handleSave} size="sm" disabled={isLoading}>
-                        <Save className="w-4 h-4 mr-2" />
-                        {isLoading ? "Saving..." : "Save"}
-                      </Button>
-                      <Button onClick={handleCancel} size="sm" variant="outline">
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-
-                  <div>
-                    <Label>Full Name</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editForm.name}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, name: e.target.value })
-                        }
-                      />
-                    ) : (
-                      <div className="p-3 bg-muted rounded-md">{user.name}</div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label>Email</Label>
-                    <div className="p-3 bg-muted rounded-md">
-                      {user.email}
-                    </div>
-                  </div>
-
-                  {isEditing && (
-                    <div>
-                      <Label>Avatar URL</Label>
-                      <Input
-                        value={editForm.avatar}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, avatar: e.target.value })
-                        }
-                      />
-                    </div>
-                  )}
-
-                </CardContent>
-              </Card>
-            </div>
-
-          </div>
+          <Button
+            onClick={handleLogout}
+            className="bg-red-600 text-white hover:bg-red-500 transition duration-200"
+          >
+            Logout
+          </Button>
         </div>
+
+        <div className="grid md:grid-cols-3 gap-6 w-full">
+
+          {/* LEFT */}
+          <Card className="p-6 text-center border border-white/10 rounded-xl">
+            <Avatar
+              className="w-24 h-24 mx-auto mb-4 cursor-pointer"
+              onClick={() => setPreviewOpen(true)}
+            >
+              <AvatarImage src={user.avatar} />
+              <AvatarFallback><User /></AvatarFallback>
+            </Avatar>
+
+            <h2 className="text-xl font-bold">{user.name}</h2>
+            <p className="text-muted-foreground">{user.email}</p>
+
+            <Badge className="mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+              <Trophy className="w-3 h-3 mr-1" />
+              Gamer
+            </Badge>
+          </Card>
+
+          {/* RIGHT */}
+          <Card className="p-6 border border-white/10 rounded-xl col-span-2">
+
+            <div className="flex justify-between mb-4">
+              <h2 className="font-semibold">Profile Info</h2>
+
+              {!isEditing ? (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                >
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSave}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                  >
+                    {isLoading ? "Saving..." : "Save"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                    className="border-white/10 hover:bg-white/10"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+
+              <Field label="Name" value={editForm.name} editing={isEditing}
+                onChange={(v) => setEditForm({ ...editForm, name: v })} />
+
+              <StaticField label="Email" value={user.email} />
+
+              <Field label="Phone" value={editForm.phone} editing={isEditing}
+                onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+
+              <Field label="Bio" value={editForm.bio} editing={isEditing}
+                onChange={(v) => setEditForm({ ...editForm, bio: v })} />
+
+              {/* GAME */}
+              <div>
+                <Label>Favorite Game</Label>
+                {isEditing ? (
+                  <select
+                    value={editForm.favoriteGame}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, favoriteGame: e.target.value })
+                    }
+                    className="w-full p-2 border border-white/10 bg-background rounded-md"
+                  >
+                    <option value="">Select</option>
+                    <option>BGMI</option>
+                    <option>Valorant</option>
+                    <option>CSGO</option>
+                    <option>COD</option>
+                  </select>
+                ) : (
+                  <div className="p-2 border border-white/10 rounded-md">
+                    {user.favoriteGame || "Not set"}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </Card>
+        </div>
+
+        {/* AVATAR MODAL */}
+        {previewOpen && (
+          <div
+            className="fixed inset-0 bg-black/80 flex items-center justify-center"
+            onClick={() => setPreviewOpen(false)}
+          >
+            <img src={user.avatar} className="max-w-xs rounded" />
+          </div>
+        )}
+
       </div>
     </section>
+  );
+}
+
+/* HELPERS */
+
+function Field({ label, value, editing, onChange }: any) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      {editing ? (
+        <Input value={value} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <div className="p-2 border border-white/10 rounded-md">{value || "Not set"}</div>
+      )}
+    </div>
+  );
+}
+
+function StaticField({ label, value }: any) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="p-2 border border-white/10 rounded-md">{value}</div>
+    </div>
   );
 }

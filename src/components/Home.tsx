@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Trophy, Star, Users, Play, TrendingUp, ArrowRight, Target, Zap, Crown, Calendar, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
-import { playersApi, tournamentsApi } from "../utils/api";
 import { testBackendConnection } from "../utils/testApi";
 import { fallbackPlayersData, fallbackTournamentsData } from "../utils/fallbackData";
 import { gameLogos, gameDescriptions } from "../utils/gameData";

@@ -9,7 +9,7 @@ import {
   Globe,
   LogOut,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import {
   Select,
@@ -20,8 +20,11 @@ import {
 } from "./ui/select";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useCountry } from "./CountryContext";
+import { useAuth } from "./AuthContext";
 
-
+// 🔥 Firebase logout
+import { signOut } from "firebase/auth";
+import { auth } from "../lib/firebase";
 
 interface HeaderProps {
   currentSection: string;
@@ -30,29 +33,15 @@ interface HeaderProps {
 
 export function Header({ currentSection, onNavigate }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+
   const { theme, setTheme } = useTheme();
   const { selectedCountry, setSelectedCountry, countries } = useCountry();
 
-  // 🔥 Supabase Auth Listener
-  useEffect(() => {
-    const getUser = async () => {
-      
-      setUser(data.user);
-    };
-
-    getUser();
-
-    
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  // ✅ REAL AUTH USER
+  const { user } = useAuth();
 
   const handleLogout = async () => {
-    
-    setUser(null);
+    await signOut(auth); // 🔥 logout from Firebase
     onNavigate("home");
   };
 
@@ -69,6 +58,7 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
     <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <div
             className="flex items-center space-x-2 cursor-pointer"
@@ -103,13 +93,11 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
 
           {/* Right Section */}
           <div className="hidden md:flex items-center space-x-4">
+
             {/* Country */}
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4 text-muted-foreground" />
-              <Select
-                value={selectedCountry}
-                onValueChange={setSelectedCountry}
-              >
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                 <SelectTrigger className="w-32 h-8 text-xs">
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
@@ -123,21 +111,13 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
               </Select>
             </div>
 
-            {/* Theme Toggle */}
+            {/* Theme */}
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
 
             {/* Cart */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleNavigation("cart")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => handleNavigation("cart")}>
               <ShoppingCart className="w-4 h-4 mr-2" />
               Cart
             </Button>
@@ -152,10 +132,10 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
                 >
                   <ImageWithFallback
                     src={
-                      user.user_metadata?.avatar_url ||
+                      user.photoURL ||
                       `https://ui-avatars.com/api/?name=${user.email}`
                     }
-                    alt={user.email}
+                    alt={user.email || "user"}
                     className="w-6 h-6 rounded-full mr-2"
                   />
                   My Account
@@ -178,7 +158,7 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile */}
           <Button
             variant="ghost"
             size="sm"

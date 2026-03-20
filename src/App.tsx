@@ -14,9 +14,8 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { CartProvider } from "./components/CartContext";
 import { CountryProvider } from "./components/CountryContext";
 import { Toaster } from "./components/ui/sonner";
-import { DatabaseTest } from "./components/DatabaseTest";
-
-
+import { AuthProvider } from "./components/AuthContext";
+import { GameDetails } from "./components/GameDetails"; // ✅ NEW
 
 export default function App() {
   const [currentSection, setCurrentSection] = useState("home");
@@ -26,6 +25,12 @@ export default function App() {
   };
 
   const renderContent = () => {
+    // ✅ 🔥 DYNAMIC GAME PAGE HANDLER
+    if (currentSection.startsWith("game-")) {
+      const gameId = currentSection.replace("game-", "");
+      return <GameDetails gameId={gameId} />;
+    }
+
     switch (currentSection) {
       case "home":
         return (
@@ -34,22 +39,28 @@ export default function App() {
             <Home onNavigate={handleNavigate} />
           </>
         );
+
       case "teams":
         return <Teams onNavigate={handleNavigate} />;
+
       case "players":
         return <PlayerStats />;
+
       case "tournaments":
         return <Tournaments />;
+
       case "shop":
         return <Shop onNavigate={handleNavigate} />;
+
       case "cart":
         return <Cart onNavigate={handleNavigate} />;
+
       case "login":
         return <Login onNavigate={handleNavigate} />;
+
       case "profile":
         return <Profile onNavigate={handleNavigate} />;
-      case "database-test":
-        return <DatabaseTest />;
+
       default:
         return (
           <>
@@ -62,18 +73,24 @@ export default function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="esports-theme">
-      <CountryProvider>
-        <CartProvider>
-          <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-            <Header currentSection={currentSection} onNavigate={handleNavigate} />
-            <main>
-              {renderContent()}
-            </main>
-            <Footer />
-            <Toaster />
-          </div>
-        </CartProvider>
-      </CountryProvider>
+      <AuthProvider>
+        <CountryProvider>
+          <CartProvider>
+            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+              
+              <Header
+                currentSection={currentSection}
+                onNavigate={handleNavigate}
+              />
+
+              <main>{renderContent()}</main>
+
+              <Footer />
+              <Toaster />
+            </div>
+          </CartProvider>
+        </CountryProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
