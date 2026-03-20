@@ -6,7 +6,6 @@ import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Separator } from "./ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
-import { supabase } from "../utils/supabase/supabaseclient.js";
 import { toast } from "sonner";
 
 interface LoginProps {

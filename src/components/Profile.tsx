@@ -8,7 +8,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { ArrowLeft, Edit, Save, X, User, Mail, Calendar, Trophy, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "../utils/supabase/supabaseclient.js";
+
 
 interface ProfileProps {
   onNavigate?: (section: string) => void;

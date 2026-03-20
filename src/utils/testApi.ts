@@ -1,4 +1,4 @@
-import { supabase } from './supabase/supabaseclient'
+
 
 export const testBackendConnection = async () => {
   try {

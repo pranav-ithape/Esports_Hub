@@ -20,7 +20,8 @@ import {
 } from "./ui/select";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useCountry } from "./CountryContext";
-import { supabase } from "../utils/supabase/supabaseclient";
+
+
 
 interface HeaderProps {
   currentSection: string;
@@ -36,17 +37,13 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
   // 🔥 Supabase Auth Listener
   useEffect(() => {
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      
       setUser(data.user);
     };
 
     getUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
+    
 
     return () => {
       listener.subscription.unsubscribe();
@@ -54,7 +51,7 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    
     setUser(null);
     onNavigate("home");
   };

@@ -16,6 +16,8 @@ import { CountryProvider } from "./components/CountryContext";
 import { Toaster } from "./components/ui/sonner";
 import { DatabaseTest } from "./components/DatabaseTest";
 
+
+
 export default function App() {
   const [currentSection, setCurrentSection] = useState("home");
 

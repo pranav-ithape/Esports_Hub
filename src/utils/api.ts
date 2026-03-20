@@ -1,6 +1,4 @@
-import { projectId, publicAnonKey } from './supabase/info'
 
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-30bcd8f7`
 
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   try {
