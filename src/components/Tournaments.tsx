@@ -7,8 +7,8 @@ import { Input } from "./ui/input";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Trophy, Calendar, Users, MapPin, Clock, Filter, Search, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { tournamentsApi } from "../utils/api";
-import { fallbackTournamentsData } from "../utils/fallbackData";
+import { db } from "../lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 import { gameLogos } from "../utils/gameData";
 
 
@@ -287,25 +287,43 @@ export function Tournaments() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTournaments = async () => {
-      try {
-        setLoading(true);
-        const response = await tournamentsApi.getAll();
-        if (response.success) {
-          setTournamentsData(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching tournaments:', error);
-        // Use fallback data when API fails
-        setTournamentsData(fallbackTournamentsData);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTournaments = async () => {
+    try {
+      setLoading(true);
 
-    fetchTournaments();
-  }, []);
+      const snap = await getDocs(collection(db, "tournaments"));
 
+      const data = snap.docs.map((doc) => {
+        const d = doc.data();
+
+        return {
+          id: doc.id,
+          name: d.name || "",
+          game: d.game || "",
+          prizePool: `$${d.prizePool || 0}`,
+          startDate: d.startDate?.toDate?.()?.toLocaleDateString() || "",
+          endDate: d.endDate?.toDate?.()?.toLocaleDateString() || "",
+          location: d.location || "",
+          participants: d.participants || 0,
+          status: d.status || "upcoming",
+          type: d.type || "international", // IMPORTANT
+          image: d.image || "https://via.placeholder.com/400",
+          description: d.description || "",
+          country: d.country || ""
+        };
+      });
+
+      setTournamentsData(data);
+
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchTournaments();
+}, []);
   const getFilteredTournaments = () => {
     let tournaments = tournamentsData.filter(tournament => tournament.type === activeTab);
     

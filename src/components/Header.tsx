@@ -37,11 +37,11 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { selectedCountry, setSelectedCountry, countries } = useCountry();
 
-  // ✅ REAL AUTH USER
-  const { user } = useAuth();
+  // ✅ UPDATED (user + userRole)
+  const { user, userRole } = useAuth();
 
   const handleLogout = async () => {
-    await signOut(auth); // 🔥 logout from Firebase
+    await signOut(auth);
     onNavigate("home");
   };
 
@@ -113,11 +113,19 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
 
             {/* Theme */}
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="sm" onClick={() => handleNavigation("cart")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleNavigation("cart")}
+            >
               <ShoppingCart className="w-4 h-4 mr-2" />
               Cart
             </Button>
@@ -125,6 +133,19 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
             {/* 🔥 AUTH SECTION */}
             {user ? (
               <div className="flex items-center space-x-2">
+
+                {/* 🔥 ADMIN BUTTON */}
+                {userRole === "admin" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleNavigation("admin")}
+                  >
+                    Admin
+                  </Button>
+                )}
+
+                {/* Profile */}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -141,6 +162,7 @@ export function Header({ currentSection, onNavigate }: HeaderProps) {
                   My Account
                 </Button>
 
+                {/* Logout */}
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout

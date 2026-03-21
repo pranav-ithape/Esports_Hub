@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as TabsPrimitive from "@radix-ui/react-tabs@1.1.3";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "./utils";
 
@@ -50,14 +50,11 @@ function TabsTrigger({
   );
 }
 
-function TabsContent({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+function TabsContent(props: any) {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className="flex-1 outline-none"
       {...props}
     />
   );
