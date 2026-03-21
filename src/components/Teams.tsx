@@ -290,15 +290,21 @@ const GameBox = ({
 
   const gameImage = gameData?.image || "";
 
-  const totalPlayers = gameTeams.reduce(
-    (acc, team) => acc + (team.players?.length || 0),
-    0
-  );
+  // ✅ SAME AS PLAYER UI LOGIC
+  const totalTeams = gameTeams.length;
+
+  const avgWinRate =
+    totalTeams > 0
+      ? Math.round(
+          gameTeams.reduce((acc, t) => acc + (t.winRate || 0), 0) /
+            totalTeams
+        )
+      : 0;
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const rotateY = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
-    const rotateX = -((e.clientY - rect.top) / rect.height - 0.5) * 6;
+    const rotateY = ((e.clientX - rect.left) / rect.width - 0.5) * 8;
+    const rotateX = -((e.clientY - rect.top) / rect.height - 0.5) * 8;
     setTilt({ x: rotateX, y: rotateY });
   };
 
@@ -311,60 +317,62 @@ const GameBox = ({
       }}
       onMouseMove={handleMouseMove}
       onClick={() => handleGameEnter(gameId)}
-      className="
-        cursor-pointer overflow-hidden
-        rounded-[30px]
-        border border-white/10
-        bg-gradient-to-br from-[#151515] via-[#111111] to-[#0a0a0a]
-        transition-all duration-300
-      "
+      className="bg-gradient-to-br from-card to-muted border-border hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 cursor-pointer group overflow-hidden rounded-[26px]"
       style={{
         transform: hovered
-          ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.03)`
+          ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.04)`
           : "perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)",
         boxShadow: hovered
-          ? "0 10px 25px rgba(0,0,0,0.42)"
-          : "0 4px 12px rgba(0,0,0,0.22)",
-        transition: "transform 180ms ease, box-shadow 180ms ease",
+          ? "0 12px 30px rgba(0,0,0,0.45)"
+          : "0 4px 12px rgba(0,0,0,0.25)",
       }}
     >
-      <CardContent className="p-8 text-center">
-        <div className="mb-5 flex justify-center">
-          <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <CardContent className="p-8">
+        <div className="text-center">
+          {/* ✅ IMAGE (same style as player page) */}
+          <div className="w-24 h-24 mx-auto mb-4 rounded-lg overflow-hidden">
             <ImageWithFallback
               src={gameImage}
               alt={gameName}
-              className="h-24 w-24 object-contain"
+              className="w-full h-full object-cover"
             />
           </div>
-        </div>
 
-        <h2 className="mb-2 text-2xl font-semibold text-white">
-          {gameName}
-        </h2>
+          {/* ✅ TITLE */}
+          <h2 className="text-2xl text-foreground mb-2">{gameName}</h2>
 
-        <p className="mb-7 text-sm text-gray-400">
-          {gameDescription}
-        </p>
+          {/* ✅ DESCRIPTION */}
+          <p className="text-muted-foreground mb-6">{gameDescription}</p>
 
-        <div className="mb-8 flex justify-center gap-16">
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-3xl font-semibold text-transparent">
-              {gameTeams.length}
+          {/* ✅ STATS (MATCH PLAYER PAGE EXACTLY) */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <div className="text-3xl text-blue-500">{totalTeams}</div>
+              <div className="text-muted-foreground text-sm">Teams</div>
             </div>
-            <div className="text-xs text-gray-400">Teams</div>
+            <div>
+              <div className="text-3xl text-green-500">
+                {avgWinRate}%
+              </div>
+              <div className="text-muted-foreground text-sm">
+                Avg Win Rate
+              </div>
+            </div>
           </div>
-        </div>
 
-        <Button className="mx-auto flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500">
-          Enter
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          {/* ✅ BUTTON */}
+          <Button
+            onClick={() => handleGameEnter(gameId)}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white group-hover:scale-105 transition-transform"
+          >
+            <span className="mr-2">Enter</span>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 };
-
   const GameDetailView = ({
     gameId,
     gameData,
