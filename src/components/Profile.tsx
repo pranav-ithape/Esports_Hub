@@ -7,10 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { ArrowLeft, User, Trophy } from "lucide-react";
 import { toast } from "sonner";
-import { setDoc } from "firebase/firestore";
+import { setDoc, addDoc, serverTimestamp } from "firebase/firestore"; // ✅ added
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, updateDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 
 interface ProfileProps {
   onNavigate?: (section: string) => void;
@@ -18,9 +18,8 @@ interface ProfileProps {
 
 export function Profile({ onNavigate }: ProfileProps) {
   const [user, setUser] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]); // ✅ NEW
+  const [orders, setOrders] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -40,7 +39,6 @@ export function Profile({ onNavigate }: ProfileProps) {
       }
 
       try {
-        // 🔥 USER DATA
         const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
 
@@ -88,35 +86,36 @@ export function Profile({ onNavigate }: ProfileProps) {
   }, []);
 
   const handleSave = async () => {
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    const docRef = doc(db, "users", user.id);
+    try {
+      const docRef = doc(db, "users", user.id);
 
-    await setDoc(
-      docRef,
-      {
-        name: editForm.name || "",
-        email: user.email || "",
-        phone: editForm.phone || "",
-        bio: editForm.bio || "",
-        favoriteGame: editForm.favoriteGame || "",
-        updatedAt: new Date()
-      },
-      { merge: true } // ✅ IMPORTANT
-    );
+      await setDoc(
+        docRef,
+        {
+          name: editForm.name || "",
+          email: user.email || "",
+          phone: editForm.phone || "",
+          bio: editForm.bio || "",
+          favoriteGame: editForm.favoriteGame || "",
+          updatedAt: new Date()
+        },
+        { merge: true }
+      );
 
-    setUser({ ...user, ...editForm });
-    setIsEditing(false);
+      setUser({ ...user, ...editForm });
+      setIsEditing(false);
 
-    toast.success("Profile updated!");
-  } catch (error) {
-    console.error(error);
-    toast.error("Error updating profile");
-  }
+      toast.success("Profile updated!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error updating profile");
+    }
 
-  setIsLoading(false);
-};
+    setIsLoading(false);
+  };
+
   const handleLogout = async () => {
     await signOut(auth);
     toast.success("Logged out");
@@ -129,7 +128,6 @@ export function Profile({ onNavigate }: ProfileProps) {
     <section className="min-h-screen bg-background flex justify-center px-4 py-16">
       <div className="w-full max-w-4xl flex flex-col items-center">
 
-        {/* TOP */}
         <div className="flex justify-between mb-6 w-full">
           <Button onClick={() => onNavigate?.("home")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -143,7 +141,6 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         <div className="grid md:grid-cols-3 gap-6 w-full">
 
-          {/* LEFT */}
           <Card className="p-6 text-center">
             <Avatar className="w-24 h-24 mx-auto mb-4">
               <AvatarImage src={user.avatar} />
@@ -159,7 +156,6 @@ export function Profile({ onNavigate }: ProfileProps) {
             </Badge>
           </Card>
 
-          {/* RIGHT */}
           <Card className="p-6 col-span-2">
 
             <div className="flex justify-between mb-4">
@@ -193,7 +189,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           </Card>
         </div>
 
-        {/* 🔥 ORDERS SECTION (NEW) */}
+        {/* ORDERS */}
         <div className="w-full mt-10">
           <h2 className="text-2xl mb-4">My Orders</h2>
 
@@ -210,10 +206,18 @@ export function Profile({ onNavigate }: ProfileProps) {
 
                 <div className="mt-3 space-y-2">
                   {order.items?.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <img src={item.image} className="w-10 h-10 rounded" />
-                      <span>{item.name}</span>
-                      <span>× {item.quantity}</span>
+                    <div key={i} className="flex flex-col gap-2 border-t pt-3">
+
+                      <div className="flex items-center gap-3">
+                        <img src={item.image} className="w-10 h-10 rounded" />
+                        <span>{item.name}</span>
+                        <span>× {item.quantity}</span>
+                      </div>
+
+                      {order.status === "delivered" && (
+                        <ReviewBox productId={item.id} user={user} />
+                      )}
+
                     </div>
                   ))}
                 </div>
@@ -225,6 +229,71 @@ export function Profile({ onNavigate }: ProfileProps) {
 
       </div>
     </section>
+  );
+}
+
+/* 🔥 REVIEW COMPONENT */
+
+function ReviewBox({ productId, user }: any) {
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+
+  const handleSubmit = async () => {
+    if (!rating || !review) {
+      alert("Fill review ❗");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "reviews"), {
+        productId,
+        userId: user.id,
+        userName: user.name || user.email,
+        rating,
+        review,
+        createdAt: serverTimestamp(),
+      });
+
+      alert("Review submitted ✅");
+
+      setRating(0);
+      setReview("");
+    } catch (err) {
+      console.error(err);
+      alert("Error ❌");
+    }
+  };
+
+  return (
+    <div className="ml-12 mt-2 border p-3 rounded">
+
+      <p className="text-sm mb-2">Write Review</p>
+
+      <select
+        value={rating}
+        onChange={(e) => setRating(Number(e.target.value))}
+        className="border p-1 rounded text-sm"
+      >
+        <option value={0}>Rating</option>
+        <option value={1}>⭐ 1</option>
+        <option value={2}>⭐ 2</option>
+        <option value={3}>⭐ 3</option>
+        <option value={4}>⭐ 4</option>
+        <option value={5}>⭐ 5</option>
+      </select>
+
+      <Input
+        placeholder="Write review..."
+        value={review}
+        onChange={(e) => setReview(e.target.value)}
+        className="mt-2"
+      />
+
+      <Button onClick={handleSubmit} className="mt-2 text-sm">
+        Submit
+      </Button>
+
+    </div>
   );
 }
 

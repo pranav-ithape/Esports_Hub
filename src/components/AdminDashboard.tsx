@@ -56,13 +56,22 @@ export default function AdminDashboard({ onNavigate }: any) {
           <p className="text-sm text-gray-400">Manage shop</p>
         </div>
 
-        {/* ✅ NEW: REVIEWS */}
+        {/* Reviews */}
         <div
           className="bg-gray-900 p-6 rounded-lg border border-gray-700 cursor-pointer hover:bg-gray-800 transition"
           onClick={() => onNavigate?.("admin-reviews")}
         >
           <h2 className="text-lg">Reviews</h2>
           <p className="text-sm text-gray-400">Manage reviews</p>
+        </div>
+
+        {/* 🔥 NEW: ORDERS */}
+        <div
+          className="bg-gray-900 p-6 rounded-lg border border-gray-700 cursor-pointer hover:bg-gray-800 transition"
+          onClick={() => onNavigate?.("admin-orders")}
+        >
+          <h2 className="text-lg">Orders</h2>
+          <p className="text-sm text-gray-400">Manage orders</p>
         </div>
 
       </div>

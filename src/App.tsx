@@ -24,6 +24,7 @@ import AddProduct from "./components/AddProduct";
 import AdminReviews from "./components/AdminReviews";
 import AddTournament from "./components/AddTournament"; // ✅ ADDED
 import AddTeam from "./components/AddTeam";
+import AdminOrders from "./components/AdminOrders";
 // 🔥 CHECKOUT
 import Checkout from "./components/Checkout";
 
@@ -97,6 +98,9 @@ export default function App() {
       // 🔥 ADD TEAM
       case "add-team":
         return <AddTeam />;
+      // 🔥 ADMIN ORDER
+      case "admin-orders":
+        return <AdminOrders />;
 
       default:
         return (

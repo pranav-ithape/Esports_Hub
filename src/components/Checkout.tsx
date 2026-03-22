@@ -25,7 +25,7 @@ export default function Checkout({ onNavigate }: CheckoutProps) {
     payment: "COD",
   });
 
-  // ✅ NEW STATE (file upload)
+  // ✅ FILE UPLOAD STATE
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
 
   const subtotal = cartItems.reduce(
@@ -47,27 +47,33 @@ export default function Checkout({ onNavigate }: CheckoutProps) {
 
       if (!user) {
         alert("Please login first ❌");
+        setLoading(false);
         return;
       }
 
+      // ✅ IMPORTANT: FORMAT ITEMS PROPERLY
       const formattedItems = cartItems.map((item) => ({
-        id: item.id,
+        id: item.id, // 🔥 REQUIRED FOR REVIEWS
         name: item.name,
         price: item.basePrice,
         quantity: item.quantity,
         image: item.image,
       }));
 
-      // ✅ SAVE ORDER WITH PAYMENT INFO
+      // ✅ SAVE ORDER (ADMIN WILL SEE THIS)
       await addDoc(collection(db, "orders"), {
-        userId: user.uid,
-        customer: form,
+        userId: user.uid, // 🔥 VERY IMPORTANT
+        customer: {
+          name: form.name,
+          phone: form.phone,
+          address: form.address,
+        },
         items: formattedItems,
         totalAmount: subtotal,
-        paymentMethod: form.payment, // ✅ NEW
+        paymentMethod: form.payment,
         paymentScreenshot: paymentScreenshot
           ? paymentScreenshot.name
-          : null, // ✅ NEW
+          : null,
         status: "pending",
         createdAt: serverTimestamp(),
       });
@@ -138,7 +144,7 @@ export default function Checkout({ onNavigate }: CheckoutProps) {
                   <option value="ONLINE">Online Payment</option>
                 </select>
 
-                {/* ✅ QR + FILE UPLOAD (NO UI CHANGE) */}
+                {/* QR + FILE UPLOAD */}
                 {form.payment === "ONLINE" && (
                   <div className="space-y-3 border-t pt-4 text-center">
 
